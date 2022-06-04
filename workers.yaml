@@ -1,0 +1,49 @@
+# namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: celery-workers
+---
+# secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: celery-workers-secret
+  namespace: celery-workers
+type: Opaque
+data:
+  AWS_ACCESS_KEY_ID: QUtJQVZPTVhQSlBPVzY3WExVQkI=
+  AWS_SECRET_ACCESS_KEY: b3VuMTltOTVPSVdEZkV4Y2tnbmxkdG81SnQxQXBOZG5Jb3ZKTmxNYQ==
+  MODEL_PATH: bW9kZWxz
+  S3_BUCKET: bWwtd2ViLWFwcC1zdG9yYWdl
+  BROKER_URI: YW1xcDovL2FkbWluOnNlY3JldHBhc3N3b3JkQHJhYmJpdG1xLnJhYmJpdG1xOjU2NzI=
+  BACKEND_URI: cnBjOi8vCg==
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: celery-workers
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: celery-worker
+  template:
+    metadata:
+      labels:
+        name: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: ml-backend:1
+          imagePullPolicy: Never
+          command:
+            - "bash"
+            - "-c"
+            - "celery -A app.celery worker -l info --concurrency 1"
+          envFrom:
+            - secretRef:
+                name: celery-workers-secret
+---

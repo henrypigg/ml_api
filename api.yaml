@@ -1,0 +1,60 @@
+# namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-backend-api
+---
+# secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fastapi-secret
+  namespace: ml-backend-api
+type: Opaque
+data:
+  AWS_ACCESS_KEY_ID: QUtJQVZPTVhQSlBPVzY3WExVQkI=
+  AWS_SECRET_ACCESS_KEY: b3VuMTltOTVPSVdEZkV4Y2tnbmxkdG81SnQxQXBOZG5Jb3ZKTmxNYQ==
+  MODEL_PATH: bW9kZWxz
+  S3_BUCKET: bWwtd2ViLWFwcC1zdG9yYWdl
+  BROKER_URI: YW1xcDovL2FkbWluOnNlY3JldHBhc3N3b3JkQHJhYmJpdG1xLnJhYmJpdG1xOjU2NzI=
+  BACKEND_URI: cnBjOi8vCg==
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-server
+  namespace: ml-backend-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: fastapi-server
+  template:
+    metadata:
+      labels:
+        name: fastapi-server
+    spec:
+      containers:
+        - name: fastapi-server
+          image: ml-backend:1
+          imagePullPolicy: Never
+          envFrom:
+            - secretRef:
+                name: fastapi-secret
+          ports:
+            - containerPort: 8080
+              name: rest
+---
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-server
+  namespace: ml-backend-api
+spec:
+  selector:
+    name: fastapi-server
+  ports:
+    - port: 80
+      targetPort: rest
